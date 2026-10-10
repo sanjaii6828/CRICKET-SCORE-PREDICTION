@@ -1,0 +1,151 @@
+{
+  "generated_at": "2026-10-08 17:09:05",
+  "formats": {
+    "T20": {
+      "model_file": "t20_model.joblib",
+      "best_algorithm": "Ridge Regression",
+      "metrics": {
+        "MAE": 8.477,
+        "RMSE": 10.987,
+        "R2": 0.7246
+      },
+      "all_model_benchmarks": {
+        "Ridge Regression": {
+          "MAE": 8.477,
+          "RMSE": 10.987,
+          "R2": 0.7246
+        },
+        "Random Forest": {
+          "MAE": 8.906,
+          "RMSE": 11.697,
+          "R2": 0.6878
+        },
+        "Gradient Boosting": {
+          "MAE": 8.532,
+          "RMSE": 11.093,
+          "R2": 0.7192
+        }
+      },
+      "total_samples": 15000,
+      "teams": [
+        "Afghanistan",
+        "Australia",
+        "Bangladesh",
+        "Chennai Super Kings",
+        "Delhi Capitals",
+        "England",
+        "Gujarat Titans",
+        "India",
+        "Kolkata Knight Riders",
+        "Lucknow Super Giants",
+        "Mumbai Indians",
+        "New Zealand",
+        "Pakistan",
+        "Punjab Kings",
+        "Rajasthan Royals",
+        "Royal Challengers Bengaluru",
+        "South Africa",
+        "Sri Lanka",
+        "Sunrisers Hyderabad",
+        "West Indies"
+      ],
+      "venues": [
+        "Dubai International Cricket Stadium, Dubai",
+        "Eden Gardens, Kolkata",
+        "Gaddafi Stadium, Lahore",
+        "Kensington Oval, Bridgetown",
+        "Lord's Cricket Ground, London",
+        "M. Chinnaswamy Stadium, Bengaluru",
+        "Melbourne Cricket Ground (MCG), Melbourne",
+        "Narendra Modi Stadium, Ahmedabad",
+        "SuperSport Park, Centurion",
+        "Sydney Cricket Ground (SCG), Sydney",
+        "The Oval, London",
+        "Wankhede Stadium, Mumbai"
+      ],
+      "features": [
+        "batting_team",
+        "bowling_team",
+        "venue",
+        "current_score",
+        "wickets",
+        "overs",
+        "runs_last_5",
+        "wickets_last_5",
+        "balls_remaining",
+        "wickets_in_hand",
+        "current_run_rate",
+        "last_5_run_rate"
+      ]
+    },
+    "ODI": {
+      "model_file": "odi_model.joblib",
+      "best_algorithm": "Gradient Boosting",
+      "metrics": {
+        "MAE": 21.223,
+        "RMSE": 28.662,
+        "R2": 0.6256
+      },
+      "all_model_benchmarks": {
+        "Ridge Regression": {
+          "MAE": 22.076,
+          "RMSE": 28.706,
+          "R2": 0.6245
+        },
+        "Random Forest": {
+          "MAE": 21.73,
+          "RMSE": 29.242,
+          "R2": 0.6103
+        },
+        "Gradient Boosting": {
+          "MAE": 21.223,
+          "RMSE": 28.662,
+          "R2": 0.6256
+        }
+      },
+      "total_samples": 12000,
+      "teams": [
+        "Afghanistan",
+        "Australia",
+        "Bangladesh",
+        "England",
+        "India",
+        "Ireland",
+        "Netherlands",
+        "New Zealand",
+        "Pakistan",
+        "South Africa",
+        "Sri Lanka",
+        "West Indies"
+      ],
+      "venues": [
+        "Dubai International Cricket Stadium, Dubai",
+        "Eden Gardens, Kolkata",
+        "Gaddafi Stadium, Lahore",
+        "Kensington Oval, Bridgetown",
+        "Lord's Cricket Ground, London",
+        "M. Chinnaswamy Stadium, Bengaluru",
+        "Melbourne Cricket Ground (MCG), Melbourne",
+        "Narendra Modi Stadium, Ahmedabad",
+        "SuperSport Park, Centurion",
+        "Sydney Cricket Ground (SCG), Sydney",
+        "The Oval, London",
+        "Wankhede Stadium, Mumbai"
+      ],
+      "features": [
+        "batting_team",
+        "bowling_team",
+        "venue",
+        "current_score",
+        "wickets",
+        "overs",
+        "runs_last_5",
+        "wickets_last_5",
+        "balls_remaining",
+        "wickets_in_hand",
+        "current_run_rate",
+        "last_5_run_rate"
+      ]
+    }
+  }
+}
