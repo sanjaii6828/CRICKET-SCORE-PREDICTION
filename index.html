@@ -1,0 +1,363 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="Cricket Score Prediction - Machine learning model forecasting final match scores for T20 and ODI cricket.">
+  <title>Cricket Score Prediction | ML Analytics Dashboard</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
+</head>
+<body>
+  <div class="app-layout">
+    <!-- Top Navigation / Banner -->
+    <header class="app-header">
+      <div class="header-container">
+        <div class="brand">
+          <div class="brand-icon" aria-hidden="true">&#127951;</div>
+          <div>
+            <h1 class="brand-title">CricPredict ML</h1>
+            <p class="brand-subtitle">Cricket Match Score Forecasting Engine</p>
+          </div>
+        </div>
+        <div class="header-badges">
+          <span class="badge badge-tech">Scikit-Learn</span>
+          <span class="badge badge-tech">Ridge &amp; GBDT</span>
+          <span class="badge badge-tech">T20 &amp; ODI</span>
+        </div>
+      </div>
+    </header>
+
+    <main class="main-content">
+      <div class="dashboard-grid">
+        <!-- Input Form Section -->
+        <section class="card input-card" aria-labelledby="form-heading">
+          <form id="prediction-form" action="/predict" method="POST">
+            <div class="card-header">
+              <div>
+                <h2 id="form-heading" class="card-title">Live Match State</h2>
+                <p class="card-desc">Enter match conditions and submit to compute the expected final score.</p>
+              </div>
+              <div class="format-controls">
+                <div class="format-pill-group" role="radiogroup" aria-label="Cricket Format Selection">
+                  <label class="format-btn {% if form_data.format == 'T20' %}active{% endif %}">
+                    <input type="radio" name="format" value="T20" {% if form_data.format == 'T20' %}checked{% endif %}>
+                    T20 (20 Overs)
+                  </label>
+                  <label class="format-btn {% if form_data.format == 'ODI' %}active{% endif %}">
+                    <input type="radio" name="format" value="ODI" {% if form_data.format == 'ODI' %}checked{% endif %}>
+                    ODI (50 Overs)
+                  </label>
+                </div>
+                <button type="submit" class="format-apply" name="action" value="change-format">Apply</button>
+              </div>
+          </div>
+
+          <!-- Quick Presets -->
+          <div class="presets-section">
+            <span class="presets-label">Quick Presets:</span>
+            <div class="presets-list">
+              <button type="submit" class="preset-chip" name="action" value="preset-t20-powerplay">T20 Powerplay (55/1)</button>
+              <button type="submit" class="preset-chip" name="action" value="preset-t20-death">T20 Death Overs (138/3)</button>
+              <button type="submit" class="preset-chip" name="action" value="preset-odi-middle">ODI Middle Overs (180/3)</button>
+            </div>
+          </div>
+
+          <!-- Teams & Venue -->
+            <div class="form-row form-row-3">
+              <div class="form-group">
+                <label for="batting_team" class="form-label">Batting Team</label>
+                <div class="select-wrapper">
+                  <select id="batting_team" name="batting_team" class="form-control" required>
+                    {% for team in teams %}
+                    <option value="{{ team }}" {% if form_data.batting_team == team %}selected{% endif %}>
+                      {{ team }}
+                    </option>
+                    {% endfor %}
+                  </select>
+                </div>
+              </div>
+
+              <div class="form-group">
+                <label for="bowling_team" class="form-label">Bowling Team</label>
+                <div class="select-wrapper">
+                  <select id="bowling_team" name="bowling_team" class="form-control" required>
+                    {% for team in teams %}
+                    <option value="{{ team }}" {% if form_data.bowling_team == team %}selected{% endif %}>
+                      {{ team }}
+                    </option>
+                    {% endfor %}
+                  </select>
+                </div>
+              </div>
+
+              <div class="form-group">
+                <label for="venue" class="form-label">Venue / Stadium</label>
+                <div class="select-wrapper">
+                  <select id="venue" name="venue" class="form-control" required>
+                    {% for v in venues %}
+                    <option value="{{ v }}" {% if form_data.venue == v %}selected{% endif %}>
+                      {{ v }}
+                    </option>
+                    {% endfor %}
+                  </select>
+                </div>
+              </div>
+            </div>
+
+            <!-- Match Score Status -->
+            <div class="form-row form-row-3">
+              <div class="form-group">
+                <label for="current_score" class="form-label">Current Runs Scored</label>
+                <input
+                  type="number"
+                  id="current_score"
+                  name="current_score"
+                  class="form-control"
+                  min="0"
+                  max="550"
+                  placeholder="e.g. 110"
+                  value="{{ form_data.current_score }}"
+                  required
+                >
+                <span class="field-hint">Total runs on scoreboard</span>
+              </div>
+
+              <div class="form-group">
+                <label for="wickets" class="form-label">Wickets Fallen</label>
+                <input
+                  type="number"
+                  id="wickets"
+                  name="wickets"
+                  class="form-control"
+                  min="0"
+                  max="9"
+                  placeholder="0 - 9"
+                  value="{{ form_data.wickets }}"
+                  required
+                >
+                <span class="field-hint">Batsmen dismissed (0-9)</span>
+              </div>
+
+              <div class="form-group">
+                <label for="overs" class="form-label">Overs Completed</label>
+                <input
+                  type="number"
+                  step="0.1"
+                  id="overs"
+                  name="overs"
+                  class="form-control"
+                  min="0.1"
+                  max="{{ total_overs - 0.5 }}"
+                  placeholder="e.g. 13.4"
+                  value="{{ form_data.overs }}"
+                  required
+                >
+                <span class="field-hint">Legal overs (0.1 to {{ total_overs - 0.5 }})</span>
+              </div>
+            </div>
+
+            <!-- Last 5 Overs Momentum -->
+            <div class="form-row form-row-2">
+              <div class="form-group">
+                <label for="runs_last_5" class="form-label">Runs in Last 5 Overs</label>
+                <input
+                  type="number"
+                  id="runs_last_5"
+                  name="runs_last_5"
+                  class="form-control"
+                  min="0"
+                  max="150"
+                  placeholder="e.g. 44"
+                  value="{{ form_data.runs_last_5 }}"
+                  required
+                >
+                <span class="field-hint">Recent scoring momentum</span>
+              </div>
+
+              <div class="form-group">
+                <label for="wickets_last_5" class="form-label">Wickets in Last 5 Overs</label>
+                <input
+                  type="number"
+                  id="wickets_last_5"
+                  name="wickets_last_5"
+                  class="form-control"
+                  min="0"
+                  max="9"
+                  placeholder="0 - 9"
+                  value="{{ form_data.wickets_last_5 }}"
+                  required
+                >
+                <span class="field-hint">Recent bowling strikes</span>
+              </div>
+            </div>
+
+            <!-- Live HUD Summary Pill -->
+            <div class="live-hud">
+              <div class="hud-item">
+                <span class="hud-label">Current Run Rate (CRR)</span>
+                <span class="hud-value">{{ hud.crr }}</span>
+              </div>
+              <div class="hud-item">
+                <span class="hud-label">Balls Remaining</span>
+                <span class="hud-value">{{ hud.balls_remaining }}</span>
+              </div>
+              <div class="hud-item">
+                <span class="hud-label">Wickets in Hand</span>
+                <span class="hud-value">{{ hud.wickets_in_hand }}</span>
+              </div>
+              <div class="hud-item">
+                <span class="hud-label">Extrapolated CRR Score</span>
+                <span class="hud-value">{{ hud.projected_score }}</span>
+              </div>
+            </div>
+
+            <p class="field-hint hud-hint">Match indicators refresh when you apply a format, choose a preset, or request a prediction.</p>
+            {% if prediction_result and not prediction_result.success %}
+            <div class="alert alert-error" role="alert">{{ prediction_result.error }}</div>
+            {% endif %}
+
+            <!-- Submit Button -->
+            <div class="form-action">
+              <button type="submit" name="action" value="predict" class="btn btn-primary">
+                Predict Expected Score
+              </button>
+            </div>
+          </form>
+        </section>
+
+        <!-- Prediction Result & Analytics Section -->
+        <section class="card result-card" aria-labelledby="result-heading">
+          <div class="card-header">
+            <div>
+              <h2 id="result-heading" class="card-title">Prediction Insights</h2>
+              <p class="card-desc">Machine learning forecast based on multi-feature phase regression.</p>
+            </div>
+            <span class="format-badge">{{ form_data.format }} Match</span>
+          </div>
+
+          <!-- Empty State (before first predict) -->
+          <div class="result-placeholder" {% if has_prediction %}style="display: none;"{% endif %}>
+            <div class="placeholder-icon">&#128200;</div>
+            <p class="placeholder-text">Click "Predict Expected Score" to generate the forecasted score and momentum breakdown.</p>
+          </div>
+
+          <!-- Active Prediction Results Display -->
+          <div class="result-body" {% if not has_prediction %}style="display: none;"{% endif %}>
+            <!-- Hero Score Box -->
+            <div class="hero-score-box">
+              <div class="hero-label">EXPECTED FINAL SCORE</div>
+              <div class="hero-score-number" id="res-final-score">
+                {{ prediction_result.prediction.final_score if has_prediction else '175' }}
+              </div>
+              <div class="hero-range-wrap">
+                <span class="hero-range-badge" id="res-score-range">
+                  Est. Range: {{ prediction_result.prediction.score_range if has_prediction else '167 - 183' }} runs
+                </span>
+                <span class="hero-error-margin" id="res-error-margin">
+                  (&plusmn;{{ prediction_result.prediction.model_margin_error if has_prediction else '8.5' }} runs MAE)
+                </span>
+              </div>
+            </div>
+
+            <!-- Score Progress Gauge -->
+            <div class="score-progress-container">
+              <div class="progress-labels">
+                <span>Current: <strong>{{ prediction_result.match_state.current_score if has_prediction else '112' }}</strong></span>
+                <span>Projected Add: <strong>+{{ prediction_result.prediction.final_score - prediction_result.match_state.current_score if has_prediction else '63' }}</strong></span>
+                <span>Target: <strong>{{ prediction_result.prediction.final_score if has_prediction else '175' }}</strong></span>
+              </div>
+              <div class="progress-bar-bg">
+                <div class="progress-bar-fill" style="width: {{ result_progress if has_prediction else 64 }}%;"></div>
+              </div>
+            </div>
+
+            <!-- Analytics Key Metrics Grid -->
+            <div class="analytics-grid">
+              <div class="metric-card">
+                <div class="metric-title">CRR vs Model Projection</div>
+                <div class="metric-val">{{ prediction_result.prediction.crr_projected if has_prediction else '170' }} runs</div>
+                <div class="metric-sub">
+                  {% if has_prediction and prediction_result.prediction.final_score > prediction_result.prediction.crr_projected %}
+                    Model forecasts +{{ prediction_result.prediction.final_score - prediction_result.prediction.crr_projected }} acceleration
+                  {% elif has_prediction and prediction_result.prediction.final_score < prediction_result.prediction.crr_projected %}
+                    Model forecasts {{ prediction_result.prediction.final_score - prediction_result.prediction.crr_projected }} due to wicket loss
+                  {% else %}
+                    Model matches current run rate
+                  {% endif %}
+                </div>
+              </div>
+
+              <div class="metric-card">
+                <div class="metric-title">Match Momentum</div>
+                <div class="metric-val momentum-pill" style="color: {{ prediction_result.analytics.momentum_color if has_prediction else '#10b981' }};">
+                  {{ prediction_result.analytics.momentum if has_prediction else 'Accelerating' }}
+                </div>
+                <div class="metric-sub">Based on last 5 overs</div>
+              </div>
+
+              <div class="metric-card">
+                <div class="metric-title">Future RR Required</div>
+                <div class="metric-val" id="res-future-rr">
+                  {{ prediction_result.analytics.required_future_run_rate if has_prediction else '9.45' }}
+                </div>
+                <div class="metric-sub">Runs per over needed</div>
+              </div>
+
+              <div class="metric-card">
+                <div class="metric-title">ML Model Algorithm</div>
+                <div class="metric-val font-mono" id="res-model-algo">
+                  {{ prediction_result.prediction.model_algorithm if has_prediction else 'Ridge Regression' }}
+                </div>
+                <div class="metric-sub">Champion pipeline</div>
+              </div>
+            </div>
+
+            <!-- Summary Matchup Banner -->
+            <div class="matchup-banner">
+              <div class="matchup-teams">
+                <span>{{ prediction_result.batting_team if has_prediction else 'India' }}</span>
+                <span class="matchup-vs">vs</span>
+                <span>{{ prediction_result.bowling_team if has_prediction else 'Australia' }}</span>
+              </div>
+              <div class="matchup-venue">
+                {{ prediction_result.venue if has_prediction else 'Wankhede Stadium, Mumbai' }}
+              </div>
+            </div>
+          </div>
+
+          <!-- Model Accuracy & Benchmarking Card -->
+          <div class="model-benchmark-card">
+            <h3 class="benchmark-title">Model Evaluation Benchmarks</h3>
+            <div class="benchmark-grid">
+              <div class="benchmark-stat">
+                <span class="bench-label">T20 MAE</span>
+                <span class="bench-num">{{ t20_metrics.MAE if t20_metrics else '8.48' }} runs</span>
+              </div>
+              <div class="benchmark-stat">
+                <span class="bench-label">T20 R&sup2; Score</span>
+                <span class="bench-num">{{ t20_metrics.R2 if t20_metrics else '0.725' }}</span>
+              </div>
+              <div class="benchmark-stat">
+                <span class="bench-label">ODI MAE</span>
+                <span class="bench-num">{{ odi_metrics.MAE if odi_metrics else '21.2' }} runs</span>
+              </div>
+              <div class="benchmark-stat">
+                <span class="bench-label">ODI R&sup2; Score</span>
+                <span class="bench-num">{{ odi_metrics.R2 if odi_metrics else '0.626' }}</span>
+              </div>
+            </div>
+          </div>
+        </section>
+      </div>
+    </main>
+
+    <footer class="app-footer">
+      <p>Cricket Score Prediction ML &bull; Built with Python, Scikit-Learn, and Flask &bull; Supports T20 &amp; ODI formats</p>
+    </footer>
+  </div>
+
+</body>
+</html>
